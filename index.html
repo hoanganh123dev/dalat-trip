@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đà Lạt Trail & Trip Planner</title>
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #d1fae5;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --tag-wfh: #3b82f6;
+      --tag-race: #dc2626;
+      --tag-food: #f59e0b;
+      --tag-rest: #8b5cf6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+
+    header {
+      background: linear-gradient(135deg, #065f46, #047857);
+      color: white;
+      padding: 24px 20px 20px;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    header p { font-size: 13px; opacity: 0.9; }
+
+    /* Sticky Navigation */
+    .tab-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      background: rgba(248, 250, 252, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 85px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-muted);
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    }
+
+    main { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* Card List */
+    .timeline-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .time-tag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .time { font-size: 13px; font-weight: 700; color: var(--primary-dark); }
+    .type-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: white;
+      text-transform: uppercase;
+    }
+    .tag-wfh { background-color: var(--tag-wfh); }
+    .tag-race { background-color: var(--tag-race); }
+    .tag-food { background-color: var(--tag-food); }
+    .tag-rest { background-color: var(--tag-rest); }
+
+    .item-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .item-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+
+    /* Maps Navigation Button */
+    .btn-maps {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-maps:active { background: #dbeafe; }
+
+    /* Budget & Checklist Styles */
+    .budget-summary {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .budget-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+    }
+    .budget-row:last-child { border: none; font-weight: 700; font-size: 15px; color: var(--primary); }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .checklist-item input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .checklist-item label { font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">TRAIL & WORK PLAN</div>
+    <h1>Đà Lạt 3N2Đ (06/11 - 08/11)</h1>
+    <p>WFH ➔ Nạp năng lượng ➔ Race Trail ➔ 13:30 Về</p>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('day1')">T6 (06/11)</button>
+    <button class="tab-btn" onclick="switchTab('day2')">T7 (07/11)</button>
+    <button class="tab-btn" onclick="switchTab('day3')">CN (08/11)</button>
+    <button class="tab-btn" onclick="switchTab('budget')">Chi phí</button>
+    <button class="tab-btn" onclick="switchTab('checklist')">Đồ race</button>
+  </div>
+
+  <main>
+    <!-- NGÀY 1 -->
+    <div id="day1" class="view-section active">
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">08:00 – 17:00</span>
+          <span class="type-tag tag-wfh">WFH</span>
+        </div>
+        <div class="item-title">Làm việc tại Cà phê Cô Bông / The Station View</div>
+        <div class="item-desc">Không gian yên tĩnh, bàn rộng, wifi mạnh và nhiều ổ cắm để làm việc tập trung cả ngày.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Tiem+Ca+Phe+Co+Bong+Da+Lat">
+          📍 Mở Google Maps đến Quán Cà Phê
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">17:00 – 18:00</span>
+          <span class="type-tag tag-rest">Check-in</span>
+        </div>
+        <div class="item-title">Về Khách sạn / Villa nhận phòng</div>
+        <div class="item-desc">Nhận xe máy, cất đồ đạc, tắm nước nóng thư giãn sau ngày làm việc.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Phu+Dong+Thien+Vuong+Phuong+8+Da+Lat">
+          📍 Mở Google Maps về Khu Khách Sạn
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">18:30 – 21:00</span>
+          <span class="type-tag tag-food">Ăn tối</span>
+        </div>
+        <div class="item-title">Thịt nướng sườn đồi tại Quán Nướng Chu</div>
+        <div class="item-desc">Thưởng thức đồ nướng than hoa trong tiết trời se lạnh phố núi, ngắm đồi đèn lồng.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Quan+Nuong+Chu+Da+Lat">
+          📍 Mở Google Maps đến Quán Nướng Chu
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">21:00 – 22:00</span>
+          <span class="type-tag tag-rest">Thư giãn</span>
+        </div>
+        <div class="item-title">Dạo nhẹ bờ Hồ Xuân Hương</div>
+        <div class="item-desc">Đi bộ thả lỏng cơ chân quanh hồ, uống một ly sữa đậu nành nóng rồi về ngủ sớm.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Ho+Xuan+Huong+Da+Lat">
+          📍 Mở Google Maps đến Hồ Xuân Hương
+        </a>
+      </div>
+    </div>
+
+    <!-- NGÀY 2 -->
+    <div id="day2" class="view-section">
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">07:30 – 08:30</span>
+          <span class="type-tag tag-food">Ăn sáng</span>
+        </div>
+        <div class="item-title">Bánh mì xíu mại Hoàng Diệu</div>
+        <div class="item-desc">Tô xíu mại nước dùng cay ấm nồng, ăn kèm bánh mì giòn rụm nạp năng lượng sạch.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Banh+mi+xiu+mai+Hoang+Dieu+Da+Lat">
+          📍 Mở Google Maps đến Tiệm Bánh Mì Xíu Mại
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">09:00 – 11:30</span>
+          <span class="type-tag tag-race">Check Race</span>
+        </div>
+        <div class="item-title">Lấy BIB & Check Track tại Thung Lũng Tình Yêu</div>
+        <div class="item-desc">Nhận Race Kit, gắn BIB và đi dạo ngắm trước địa hình vạch xuất phát hồ Đa Thiện.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Thung+lung+Tinh+Yeu+Da+Lat">
+          📍 Mở Google Maps đến Thung Lũng Tình Yêu
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">12:00 – 13:30</span>
+          <span class="type-tag tag-food">Ăn trưa</span>
+        </div>
+        <div class="item-title">Ăn trưa Cơm Niêu Như Ngọc</div>
+        <div class="item-desc">Nạp tinh bột và đạm với cá kho tộ, canh atiso hầm giò heo bồi bổ trước ngày đua.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Com+Nieu+Nhu+Ngoc+Da+Lat">
+          📍 Mở Google Maps đến Quán Cơm Niêu
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">16:30 – 18:00</span>
+          <span class="type-tag tag-rest">Ngắm hoàng hôn</span>
+        </div>
+        <div class="item-title">Chạy xe hóng gió & Cà phê Hồ Tuyền Lâm</div>
+        <div class="item-desc">Vi vu cung đường đèo thông mát rượi, ngồi cà phê ngắm ráng chiều phản chiếu mặt hồ phẳng lặng.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Ho+Tuyen+Lam+Da+Lat">
+          📍 Mở Google Maps đến Hồ Tuyền Lâm
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">18:30 – 20:00</span>
+          <span class="type-tag tag-food">Carb-loading</span>
+        </div>
+        <div class="item-title">Lẩu bò Quán Gỗ Ba Toa</div>
+        <div class="item-desc">Ăn lẩu bò nhiều thịt, mì và rau xanh để nạp đầy năng lượng dự trữ (glycogen) cho buổi sáng chạy trail.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Lau+bo+Ba+Toa+quan+go+Da+Lat">
+          📍 Mở Google Maps đến Lẩu Bò Ba Toa
+        </a>
+      </div>
+    </div>
+
+    <!-- NGÀY 3 -->
+    <div id="day3" class="view-section">
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">05:30 – 10:30</span>
+          <span class="type-tag tag-race">RACE DAY</span>
+        </div>
+        <div class="item-title">Chinh phục Race Trail Đà Lạt</div>
+        <div class="item-desc">Có mặt tại vạch xuất phát, khởi động khớp kỹ lưỡng và hoàn thành đường trail đồi thông.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Thung+lung+Tinh+Yeu+Da+Lat">
+          📍 Mở Google Maps đến Cổng Race
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">11:30 – 12:45</span>
+          <span class="type-tag tag-food">Phục hồi</span>
+        </div>
+        <div class="item-title">Tắm nước nóng & Ăn trưa Bún Bò Thố Đá</div>
+        <div class="item-desc">Về phòng tắm nhanh, check-out và ăn tô bún bò thố đá bốc khói để bù đạm và muối khoáng.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Bun+bo+tho+da+Doan+Vien+Da+Lat">
+          📍 Mở Google Maps đến Bún Bò Thố Đá
+        </a>
+      </div>
+
+      <div class="timeline-item">
+        <div class="time-tag-row">
+          <span class="time">13:00 – 13:30</span>
+          <span class="type-tag tag-rest">Lên xe về</span>
+        </div>
+        <div class="item-title">Trả xe & Lên xe khách về lúc 13h30</div>
+        <div class="item-desc">Trả xe máy tại điểm hẹn, có mặt tại phòng chờ nhà xe, chuẩn bị nước uống và lên xe về lại.</div>
+        <a class="btn-maps" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Ben+xe+Lien+tinh+Da+Lat">
+          📍 Mở Google Maps đến Bến Xe / Nhà Xe
+        </a>
+      </div>
+    </div>
+
+    <!-- CHI PHÍ -->
+    <div id="budget" class="view-section">
+      <div class="budget-summary">
+        <h3 style="margin-bottom:12px; font-size:16px;">Khoản đã thanh toán trước</h3>
+        <div class="budget-row"><span>Khách sạn (2 đêm)</span><span>740.000 ₫</span></div>
+        <div class="budget-row"><span>Xe khách khứ hồi</span><span>600.000 ₫</span></div>
+        <div class="budget-row"><span>Tổng đã chi trước</span><span>1.340.000 ₫</span></div>
+      </div>
+
+      <div class="budget-summary">
+        <h3 style="margin-bottom:12px; font-size:16px;">Chi tiêu tại Đà Lạt (Tối đa 1.660k)</h3>
+        <div class="budget-row"><span>Thuê xe ga + xăng (2.5 ngày)</span><span>400.000 ₫</span></div>
+        <div class="budget-row"><span>Cà phê WFH + Bánh</span><span>130.000 ₫</span></div>
+        <div class="budget-row"><span>Tiệc nướng đêm T6</span><span>250.000 ₫</span></div>
+        <div class="budget-row"><span>Ăn uống cả ngày T7 (Lẩu bò, cơm niêu)</span><span>380.000 ₫</span></div>
+        <div class="budget-row"><span>Dinh dưỡng & Trưa phục hồi CN</span><span>120.000 ₫</span></div>
+        <div class="budget-row"><span>Chuối, nước dừa & điện giải</span><span>80.000 ₫</span></div>
+        <div class="budget-row"><span>Hồng treo gió làm quà</span><span>200.000 ₫</span></div>
+        <div class="budget-row"><span>Dự phòng phát sinh</span><span>100.000 ₫</span></div>
+        <div class="budget-row"><span>TỔNG TOÀN BỘ CHUYẾN ĐI</span><span>3.000.000 ₫</span></div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div id="checklist" class="view-section">
+      <h3 style="margin-bottom:12px; font-size:16px;">Đồ nghề Race Trail</h3>
+      <div class="checklist-item"><input type="checkbox" id="c1"><label for="c1">Giày chạy trail bám đồi</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c2"><label for="c2">Vest nước & 2 bình nước mềm</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c3"><label for="c3">Gel năng lượng (3-4 gói) & Viên muối</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c4"><label for="c4">Đồng hồ chạy bộ + Dây sạc</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c5"><label for="c5">BIB số báo danh + Kim băng cài áo</label></div>
+
+      <h3 style="margin:20px 0 12px; font-size:16px;">Đồ dùng WFH & Về xe</h3>
+      <div class="checklist-item"><input type="checkbox" id="c6"><label for="c6">Laptop + Sạc + Chuột + Tai nghe</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c7"><label for="c7">Bộ quần áo thun dài tay mặc lên xe chiều CN</label></div>
+      <div class="checklist-item"><input type="checkbox" id="c8"><label for="c8">Sạc dự phòng cho điện thoại</label></div>
+    </div>
+  </main>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
