@@ -86,6 +86,23 @@
     .race .icon { background: #fee2e2; }
     .race { border-color: #fecaca; }
 
+    /* Lịch trình */
+    .day-note { font-size: 13px; color: var(--text-muted); background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; line-height: 1.5; }
+    .timeline { position: relative; padding-left: 18px; }
+    .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+    .stop { position: relative; margin-bottom: 12px; }
+    .stop::before { content: ''; position: absolute; left: -18px; top: 16px; width: 12px; height: 12px; border-radius: 50%; background: white; border: 3px solid var(--primary); }
+    .stop.race::before { border-color: #dc2626; }
+    .stop.rest::before { border-color: #94a3b8; }
+    .stop .time { font-size: 12.5px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+    .stop.race .time { color: #b91c1c; }
+    .stop .place { margin-bottom: 0; }
+    .stop .plain { background: #f8fafc; border: 1px dashed var(--border); border-radius: 14px; padding: 12px 14px; font-size: 13px; color: var(--text-muted); }
+    .stop .plain b { color: var(--text); font-size: 14px; display: block; margin-bottom: 2px; }
+    .alt { font-size: 12px; color: var(--text-muted); margin-top: 6px; padding-left: 2px; }
+    .alt a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+    .rest .icon { background: #f1f5f9; }
+
     /* Chi phí */
     .card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
     .card h3 { font-size: 16px; margin-bottom: 12px; }
@@ -108,19 +125,30 @@
   <header>
     <div class="badge">TRAIL & WORK TRIP</div>
     <h1>Đà Lạt 3N2Đ (06/11 – 08/11)</h1>
-    <p>3 người · Race Trail Chủ Nhật · Xe về 13:30 CN</p>
+    <p>3 người · Race T7 07/11 lúc 8:30 · Xe về 13:30 CN</p>
   </header>
 
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('places', this)">📍 Địa điểm</button>
+    <button class="tab-btn active" onclick="switchTab('plan', this)">🗓️ Lịch trình</button>
+    <button class="tab-btn" onclick="switchTab('places', this)">📍 Địa điểm</button>
     <button class="tab-btn" onclick="switchTab('budget', this)">💰 Chi phí</button>
     <button class="tab-btn" onclick="switchTab('checklist', this)">🎒 Đồ race</button>
   </div>
 
   <main>
     <!-- ĐỊA ĐIỂM -->
-    <div id="places" class="view-section active">
-      <div class="filters">
+    <div id="plan" class="view-section active">
+      <div class="filters day-tabs">
+        <button class="chip active" onclick="renderPlan(0, this)">T6 · 06/11</button>
+        <button class="chip" onclick="renderPlan(1, this)">T7 · 07/11 🏁</button>
+        <button class="chip" onclick="renderPlan(2, this)">CN · 08/11</button>
+      </div>
+      <p class="day-note" id="day-note"></p>
+      <div id="plan-list" class="timeline"></div>
+    </div>
+
+    <div id="places" class="view-section">
+      <div class="filters place-filters">
         <button class="chip active" onclick="filterPlaces('all', this)">Tất cả</button>
         <button class="chip" onclick="filterPlaces('hot', this)">🔥 Hot MXH</button>
         <button class="chip" onclick="filterPlaces('race', this)">🏃 Race</button>
@@ -211,6 +239,8 @@
       { cat: 'food', icon: '🔥', name: 'Tiệm Nướng Trên Mây', desc: 'Gà nướng cơm lam, lẩu cá tầm', q: 'Tiem Nuong Tren May Da Lat', hot: true },
       { cat: 'food', icon: '🔥', name: 'Quán Nướng Chu', desc: 'Nướng than hoa, view đồi đèn', q: 'Quan Nuong Chu Da Lat' },
       { cat: 'food', icon: '🍻', name: 'Say "Xưa"', desc: 'Quán nhậu vui, 68 Phan Đình Phùng – để sau race hãy quẩy 😄', q: 'Say Xua 68 Phan Dinh Phung Da Lat', hot: true },
+      { cat: 'food', icon: '🍗', name: 'Cơm lam gà nướng 85 Tô Hiến Thành', desc: 'Sát Bến xe Liên tỉnh – ăn trước khi về', q: 'Com lam Ga nuong 85 To Hien Thanh Da Lat' },
+      { cat: 'food', icon: '🥢', name: 'Quán Bà Năm Chút', desc: 'Nem nướng, chả bò lụi, cơm gà 25–45k – ~1km bến xe', q: 'Quan Ba Nam Chut 2A3 Ba Thang Tu Da Lat' },
       { cat: 'food', icon: '🍜', name: 'Bún bò thố đá', desc: 'Bữa trưa phục hồi sau race', q: 'Bun bo tho da Da Lat' },
       { cat: 'food', icon: '🥑', name: 'Kem bơ Thanh Thảo', desc: 'Tráng miệng nổi tiếng gần chợ', q: 'Kem bo Thanh Thao Da Lat' },
       { cat: 'food', icon: '🍛', name: 'Bờ Nôm Kitchen (Tà Nung)', desc: 'Gà nướng cơm lam, cơm niêu – tiện nếu đi Tà Nung', q: 'Bo Nom Kitchen Ta Nung Da Lat', far: true },
@@ -241,6 +271,7 @@
       { cat: 'view', icon: '🌲', name: 'Hồ Tuyền Lâm', desc: 'Chạy xe đèo thông, ngắm hồ', q: 'Ho Tuyen Lam Da Lat' },
       { cat: 'view', icon: '🛕', name: 'Thiền viện Trúc Lâm', desc: 'Yên tĩnh, view hồ Tuyền Lâm', q: 'Thien vien Truc Lam Da Lat' },
       { cat: 'view', icon: '🚡', name: 'Cáp treo Đồi Robin', desc: 'Ngắm rừng thông từ trên cao', q: 'Cap treo Robin Da Lat' },
+      { cat: 'view', icon: '🥾', name: 'Hòn Bồ', desc: 'Đỉnh ~1.709m gần làng hoa Thái Phiên, trek 1–2h, săn mây lúc 4h30–6h', q: 'Hon Bo Da Lat', hot: true },
       { cat: 'view', icon: '☁️', name: 'Đồi Đa Phú', desc: 'Săn mây sáng sớm, đồi thông rộng', q: 'Doi Da Phu Da Lat', hot: true },
       { cat: 'view', icon: '🏔️', name: 'Samten Hills', desc: 'Quần thể tâm linh rất lớn', q: 'Samten Hills Da Lat', far: true },
       { cat: 'view', icon: '💧', name: 'Suối Tía', desc: 'Suối hoang sơ – đường xa', q: 'Suoi Tia Da Lat', hot: true, far: true },
@@ -249,6 +280,81 @@
     ];
 
     const GROUPS = { race: '🏃 Race', cafe: '☕ Cà phê', food: '🍜 Ăn uống', night: '🌙 Về đêm', view: '🌲 Tham quan & vui chơi' };
+
+    // ====== LỊCH TRÌNH CỐ ĐỊNH ======
+    // place: true → thẻ bấm mở Maps; place: false → mốc nghỉ ngơi
+    const PLAN = [
+      {
+        note: '🎯 Ngày trước race. Sáng đi <b>Hòn Bồ ngay từ bến xe</b> – leo/xuống chậm, coi như buổi chạy giãn chân. Nhận BIB linh hoạt buổi chiều, tối ngủ sớm.',
+        stops: [
+          { t: '~06:30', cat: 'rest', icon: '🚌', name: 'Tới Bến xe Liên tỉnh Đà Lạt', desc: 'Gửi balo lớn ở nhà xe/khách sạn nếu được, chỉ mang đồ trek', q: 'Ben xe Lien tinh Da Lat 01 To Hien Thanh' },
+          { t: '07:00', cat: 'food', icon: '🥖', name: 'Ăn sáng: Bánh mì xíu mại Hoàng Diệu', desc: '~2km từ bến xe, mở sớm. Ăn vừa đủ trước khi leo', q: 'Banh mi xiu mai Hoang Dieu Da Lat' },
+          { t: '08:00', cat: 'rest', icon: '🚙', name: 'Xe thuê đón đi Hòn Bồ', desc: 'Hẹn xe đón tại quán ăn sáng – trọn gói đón, chờ, trả', plain: true },
+          { t: '08:30', cat: 'view', icon: '🥾', name: 'Trek đỉnh Hòn Bồ', desc: 'Giờ này biển mây thường đã tan, bù lại trời trong, view thung lũng rõ. Đi chậm, xuống dốc đá cẩn thận – mai còn race', q: 'Hon Bo Da Lat' },
+          { t: '11:00', cat: 'rest', icon: '🛵', name: 'Về khách sạn, nhận xe máy', desc: 'Gửi đồ/nhận phòng, tắm nước nóng', plain: true },
+          { t: '12:00', cat: 'food', icon: '🍚', name: 'Trưa: Cơm Niêu Như Ngọc', desc: 'Cá kho tộ, canh atiso – bắt đầu nạp carb', q: 'Com Nieu Nhu Ngoc Da Lat' },
+          { t: '13:00', cat: 'rest', icon: '😴', name: 'Ngủ trưa', desc: 'Dậy sớm + ngồi xe đêm + trek – phải ngủ bù', plain: true },
+          { t: '15:00', cat: 'race', icon: '🏁', name: 'Nhận BIB & check track (linh hoạt)', desc: 'Thung Lũng Tình Yêu – xem cổng xuất phát, đường vào, chỗ gửi xe', q: 'Thung lung Tinh Yeu Da Lat' },
+          { t: '16:30', cat: 'view', icon: '🌲', name: 'Hồ Tuyền Lâm – ngắm hoàng hôn (tuỳ sức)', desc: 'Chạy xe hóng gió, ngồi cà phê. Mệt thì bỏ, về nghỉ', q: 'Ho Tuyen Lam Da Lat' },
+          { t: '18:30', cat: 'food', icon: '🍲', name: 'Tối carb-loading: Lẩu bò Ba Toa', desc: 'Nhiều mì, rau, thịt – tránh đồ lạ, đồ cay và rượu bia', q: 'Lau bo Ba Toa quan go Da Lat', alt: { name: 'Lẩu gà lá é Tao Ngộ', q: 'Lau ga la e Tao Ngo Da Lat' } },
+          { t: '20:30', cat: 'rest', icon: '🎒', name: 'Soạn đồ race & ngủ trước 22h', desc: 'Gắn BIB, sạc đồng hồ, xếp sẵn gel, vest nước, áo gió', plain: true },
+        ]
+      },
+      {
+        note: '🏁 Race 8:30. Chiều <b>chỉ đi chỗ bằng phẳng</b> cho chân phục hồi. Tối nay Tháp Vinaphone lên đèn (cuối tuần 18h–22h).',
+        stops: [
+          { t: '05:45', cat: 'rest', icon: '⏰', name: 'Dậy, ăn nhẹ', desc: 'Bánh mì/chuối + nước trước giờ chạy ~2–2,5 tiếng', plain: true },
+          { t: '07:30', cat: 'race', icon: '🏞️', name: 'Có mặt khu xuất phát', desc: 'Gửi xe, khởi động, xếp hàng block', q: 'Thung lung Tinh Yeu Da Lat' },
+          { t: '08:30', cat: 'race', icon: '🏃', name: 'START RACE', desc: 'Chạy đúng pace kế hoạch – dốc Đà Lạt dễ đốt sức ở 5km đầu', q: 'Ho Da Thien Da Lat' },
+          { t: '~12:00', cat: 'food', icon: '🍜', name: 'Trưa phục hồi: Bún bò thố đá', desc: 'Về tắm nước nóng rồi ăn – bù đạm và muối. Giờ có thể lệch theo cự ly', q: 'Bun bo tho da Da Lat' },
+          { t: '13:30', cat: 'rest', icon: '😴', name: 'Ngủ trưa 1,5–2 tiếng', desc: 'Quan trọng nhất cho buổi tối còn sức đi chơi', plain: true },
+          { t: '16:00', cat: 'view', icon: '🌷', name: 'Công viên hoa Dalat Fantasy', desc: 'Mới, miễn phí, ngay bờ hồ – đường bằng, đi dạo giãn cơ', q: 'Cong vien hoa Dalat Fantasy' },
+          { t: '17:00', cat: 'view', icon: '🌊', name: 'Hồ Xuân Hương & Quảng trường Lâm Viên', desc: 'Đi bộ nhẹ quanh hồ, chụp ảnh check-in', q: 'Quang truong Lam Vien Da Lat' },
+          { t: '18:30', cat: 'food', icon: '🍻', name: 'Tối ăn mừng: Say "Xưa"', desc: 'Quán nhậu vui 68 Phan Đình Phùng – xong race rồi thì quẩy', q: 'Say Xua 68 Phan Dinh Phung Da Lat', alt: { name: 'Quán Nướng Chu (view đồi đèn)', q: 'Quan Nuong Chu Da Lat' } },
+          { t: '20:30', cat: 'night', icon: '🗼', name: 'Tháp Vinaphone + Dốc Sương Nguyệt Ánh', desc: 'Tháp lên đèn vàng, quay trend "Đại Lý" ở dốc – miễn phí', q: 'Doc Suong Nguyet Anh Da Lat' },
+          { t: '21:30', cat: 'night', icon: '🛒', name: 'Chợ đêm + Kem bơ Thanh Thảo', desc: 'Ăn vặt, uống sữa đậu nóng. Muốn ngồi tiếp thì lên Marché Beer Garden', q: 'Cho dem Da Lat' },
+        ]
+      },
+      {
+        note: '☕ Sáng thong thả sau race: săn mây nhẹ ở quán cà phê, rồi máng trượt Datanla (ngồi, không tốn chân). Trưa ăn cạnh bến xe để kịp chuyến 13:30.',
+        stops: [
+          { t: '05:30', cat: 'cafe', icon: '🌅', name: 'Săn mây: Cà phê Bình Minh Ơi (tuỳ chọn)', desc: 'Không phải leo. Muốn ngủ nướng thì bỏ qua', q: 'Tiem Ca Phe Binh Minh Oi Da Lat' },
+          { t: '07:30', cat: 'food', icon: '🥞', name: 'Ăn sáng: Bánh căn Nhà Chung', desc: 'Món đặc trưng Đà Lạt', q: 'Banh can Nha Chung Da Lat' },
+          { t: '08:30', cat: 'view', icon: '🎢', name: 'Máng trượt Thác Datanla', desc: 'Đi sớm vắng người, ~5km đèo Prenn. Chỉ chơi máng trượt, chân sau race không nên vượt thác', q: 'Thac Datanla Da Lat' },
+          { t: '10:45', cat: 'rest', icon: '🧳', name: 'Check-out khách sạn', desc: 'Kiểm tra sạc, đồng hồ, BIB làm kỷ niệm', plain: true },
+          { t: '11:00', cat: 'night', icon: '🛍️', name: 'Mua quà: Chợ Đà Lạt', desc: 'Hồng treo gió, mứt, atiso, trà', q: 'Cho Da Lat' },
+          { t: '11:45', cat: 'food', icon: '🍗', name: 'Trưa gần bến xe: Cơm lam gà nướng 85 Tô Hiến Thành', desc: 'Cùng đường với Bến xe Liên tỉnh – ăn xong đi bộ ra bến. Ăn vừa đủ, xe đèo dễ say', q: 'Com lam Ga nuong 85 To Hien Thanh Da Lat', alt: { name: 'Quán Bà Năm Chút – nem nướng, cơm gà (2A3 đường 3/4, ~1km)', q: 'Quan Ba Nam Chut 2A3 Ba Thang Tu Da Lat' } },
+          { t: '12:45', cat: 'rest', icon: '🛵', name: 'Trả xe máy tại bến xe', desc: 'Hẹn tiệm ra nhận xe ở bến – đỡ phải chạy ngược về', plain: true },
+          { t: '13:30', cat: 'race', icon: '🚌', name: 'Lên xe về – Bến xe Liên tỉnh Đà Lạt', desc: '01 Tô Hiến Thành. Nếu nhà xe đón ở văn phòng riêng thì đổi điểm ăn trưa cho gần đó', q: 'Ben xe Lien tinh Da Lat 01 To Hien Thanh' },
+        ]
+      }
+    ];
+
+    function stopHtml(x) {
+      const cls = x.cat === 'race' ? 'race' : (x.plain ? 'rest' : '');
+      let card;
+      if (x.plain) {
+        card = `<div class="plain"><b>${x.icon} ${x.name}</b>${x.desc}</div>`;
+      } else {
+        card = `
+          <a class="place ${x.cat}" href="${mapsUrl(x.q)}" target="_blank" rel="noopener">
+            <div class="icon">${x.icon}</div>
+            <div class="info"><div class="name">${x.name}</div><div class="desc">${x.desc}</div></div>
+            <div class="go">›</div>
+          </a>`;
+      }
+      const alt = x.alt ? `<div class="alt">Phương án khác: <a href="${mapsUrl(x.alt.q)}" target="_blank" rel="noopener">${x.alt.name} ›</a></div>` : '';
+      return `<div class="stop ${cls}"><div class="time">${x.t}</div>${card}${alt}</div>`;
+    }
+
+    function renderPlan(i, btn) {
+      if (btn) {
+        document.querySelectorAll('.day-tabs .chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      document.getElementById('day-note').innerHTML = PLAN[i].note;
+      document.getElementById('plan-list').innerHTML = PLAN[i].stops.map(stopHtml).join('');
+    }
 
     function mapsUrl(q) {
       return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
@@ -279,7 +385,7 @@
     }
 
     function filterPlaces(cat, btn) {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.place-filters .chip').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
       render(cat);
     }
@@ -293,6 +399,7 @@
     }
 
     render('all');
+    renderPlan(0);
   </script>
 </body>
 </html>
