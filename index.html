@@ -75,6 +75,11 @@
     .place .desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.4; }
     .place .go { font-size: 18px; color: var(--text-muted); }
 
+    .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
+    .tag.hot { background: #fee2e2; color: #b91c1c; }
+    .tag.far { background: #f1f5f9; color: #475569; }
+    .count { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .night .icon { background: #e0e7ff; }
     .cafe .icon { background: #dbeafe; }
     .food .icon { background: #fef3c7; }
     .view .icon { background: #ede9fe; }
@@ -117,9 +122,11 @@
     <div id="places" class="view-section active">
       <div class="filters">
         <button class="chip active" onclick="filterPlaces('all', this)">Tất cả</button>
+        <button class="chip" onclick="filterPlaces('hot', this)">🔥 Hot MXH</button>
         <button class="chip" onclick="filterPlaces('race', this)">🏃 Race</button>
         <button class="chip" onclick="filterPlaces('cafe', this)">☕ Cà phê</button>
         <button class="chip" onclick="filterPlaces('food', this)">🍜 Ăn uống</button>
+        <button class="chip" onclick="filterPlaces('night', this)">🌙 Về đêm</button>
         <button class="chip" onclick="filterPlaces('view', this)">🌲 Tham quan</button>
       </div>
 
@@ -171,39 +178,77 @@
   </main>
 
   <script>
+    // hot: đang được nhắc nhiều trên TikTok/MXH · far: xa trung tâm (>10km)
     const PLACES = [
       // RACE
       { cat: 'race', icon: '🏁', name: 'Thung Lũng Tình Yêu', desc: 'Nhận BIB, check track & cổng xuất phát race', q: 'Thung lung Tinh Yeu Da Lat' },
       { cat: 'race', icon: '🏞️', name: 'Hồ Đa Thiện', desc: 'Khu vực quanh vạch xuất phát', q: 'Ho Da Thien Da Lat' },
 
-      // CÀ PHÊ
-      { cat: 'cafe', icon: '☕', name: 'Tiệm Cà Phê Cô Bông', desc: 'Yên tĩnh, wifi ổn, hợp ngồi làm việc', q: 'Tiem Ca Phe Co Bong Da Lat' },
-      { cat: 'cafe', icon: '🚉', name: 'The Station View', desc: 'Không gian rộng, nhiều ổ cắm', q: 'The Station View Da Lat' },
-      { cat: 'cafe', icon: '🌄', name: 'Cà phê Hồ Tuyền Lâm', desc: 'Ngắm hoàng hôn trên hồ', q: 'Ca phe Ho Tuyen Lam Da Lat' },
+      // CÀ PHÊ – làm việc
+      { cat: 'cafe', icon: '💻', name: 'Tiệm Cà Phê Cô Bông', desc: 'Yên tĩnh, wifi ổn – hợp WFH', q: 'Tiem Ca Phe Co Bong Da Lat' },
+      { cat: 'cafe', icon: '💻', name: 'The Station View', desc: 'Decor kiểu Hàn, nhiều ổ cắm – hợp WFH', q: 'The Station View Da Lat' },
+      { cat: 'cafe', icon: '💻', name: 'Nook Cà Phê', desc: 'Phong cách minimal, hợp ngồi làm việc', q: 'Nook Ca Phe Da Lat' },
+      { cat: 'cafe', icon: '☕', name: 'The Married Beans', desc: 'Specialty coffee cho dân mê cà phê', q: 'The Married Beans Da Lat' },
+      // CÀ PHÊ – view
+      { cat: 'cafe', icon: '🌅', name: 'Tiệm Cà Phê Bình Minh Ơi', desc: 'Săn mây buổi sáng, view đồi núi', q: 'Tiem Ca Phe Binh Minh Oi Da Lat', hot: true },
+      { cat: 'cafe', icon: '🌇', name: 'Tiệm Cà Phê Cheo Veooo', desc: 'Ban công gỗ ngắm hoàng hôn thung lũng', q: 'Cheo Veooo Da Lat', hot: true },
+      { cat: 'cafe', icon: '🌇', name: 'Tiệm Cà Phê Mountain Chill', desc: 'View hoàng hôn lưng chừng đồi', q: 'Mountain Chill Coffee Da Lat', hot: true },
+      { cat: 'cafe', icon: '🌸', name: 'Tiệm Cà Phê Túi Mơ To', desc: 'Nhà kính vintage, view nhà lồng về đêm', q: 'Tiem Ca Phe Tui Mo To Da Lat', hot: true },
+      { cat: 'cafe', icon: '🏮', name: 'Lạc Hư Cổ Trấn', desc: 'Mới mở, không gian cổ trấn, mở sớm săn mây', q: 'Lac Hu Co Tran Da Lat', hot: true },
+      { cat: 'cafe', icon: '☁️', name: 'Thác Mây & Chill', desc: 'Không gian mở giữa thiên nhiên, săn mây', q: 'Thac May va Chill Da Lat', hot: true },
+      { cat: 'cafe', icon: '🌿', name: 'Quán Đương', desc: 'Sân vườn chill, đang nổi trên TikTok', q: 'Quan Duong cafe Da Lat', hot: true },
+      { cat: 'cafe', icon: '🌲', name: 'Cabin In The Woods', desc: 'Cabin gỗ trên đồi nhìn xuống thung lũng', q: 'Cabin In The Woods Da Lat' },
+      { cat: 'cafe', icon: '🌵', name: 'Cà phê Hoa Xương Rồng', desc: 'Phong cách sa mạc, view đêm đẹp', q: 'Ca phe Hoa Xuong Rong Da Lat' },
+      { cat: 'cafe', icon: '🏞️', name: 'Mê Linh Coffee Garden', desc: 'Vườn cà phê, view hồ – giá hơi cao', q: 'Me Linh Coffee Garden Da Lat' },
 
       // ĂN UỐNG
       { cat: 'food', icon: '🥖', name: 'Bánh mì xíu mại Hoàng Diệu', desc: 'Ăn sáng nóng hổi, nhanh gọn', q: 'Banh mi xiu mai Hoang Dieu Da Lat' },
-      { cat: 'food', icon: '🍚', name: 'Cơm Niêu Như Ngọc', desc: 'Cá kho tộ, canh atiso – nạp carb trước race', q: 'Com Nieu Nhu Ngoc Da Lat' },
-      { cat: 'food', icon: '🍲', name: 'Lẩu bò Quán Gỗ Ba Toa', desc: 'Carb-loading tối thứ 7', q: 'Lau bo Ba Toa quan go Da Lat' },
-      { cat: 'food', icon: '🍜', name: 'Bún bò thố đá', desc: 'Bữa trưa phục hồi sau race', q: 'Bun bo tho da Da Lat' },
-      { cat: 'food', icon: '🔥', name: 'Quán Nướng Chu', desc: 'Nướng than hoa, view đồi đèn', q: 'Quan Nuong Chu Da Lat' },
       { cat: 'food', icon: '🥞', name: 'Bánh căn Nhà Chung', desc: 'Món sáng/xế đặc trưng Đà Lạt', q: 'Banh can Nha Chung Da Lat' },
+      { cat: 'food', icon: '🍚', name: 'Cơm Niêu Như Ngọc', desc: 'Cá kho tộ, canh atiso – nạp carb trước race', q: 'Com Nieu Nhu Ngoc Da Lat' },
+      { cat: 'food', icon: '🌲', name: 'Quán Đào Liễu', desc: 'Cơm Bắc giữa rừng thông – đường dốc hẹp, đi xe máy', q: 'Quan Dao Lieu Da Lat', hot: true },
+      { cat: 'food', icon: '🍗', name: 'Lẩu gà lá é Tao Ngộ', desc: 'Lẩu gà lá é – video review rất nhiều view', q: 'Lau ga la e Tao Ngo Da Lat', hot: true },
+      { cat: 'food', icon: '🍲', name: 'Lẩu bò Quán Gỗ Ba Toa', desc: 'Carb-loading tối thứ 7', q: 'Lau bo Ba Toa quan go Da Lat' },
+      { cat: 'food', icon: '🔥', name: 'Tiệm Nướng Trên Mây', desc: 'Gà nướng cơm lam, lẩu cá tầm', q: 'Tiem Nuong Tren May Da Lat', hot: true },
+      { cat: 'food', icon: '🔥', name: 'Quán Nướng Chu', desc: 'Nướng than hoa, view đồi đèn', q: 'Quan Nuong Chu Da Lat' },
+      { cat: 'food', icon: '🍻', name: 'Say "Xưa"', desc: 'Quán nhậu vui, 68 Phan Đình Phùng – để sau race hãy quẩy 😄', q: 'Say Xua 68 Phan Dinh Phung Da Lat', hot: true },
+      { cat: 'food', icon: '🍜', name: 'Bún bò thố đá', desc: 'Bữa trưa phục hồi sau race', q: 'Bun bo tho da Da Lat' },
       { cat: 'food', icon: '🥑', name: 'Kem bơ Thanh Thảo', desc: 'Tráng miệng nổi tiếng gần chợ', q: 'Kem bo Thanh Thao Da Lat' },
-      { cat: 'food', icon: '🛒', name: 'Chợ Đà Lạt', desc: 'Ăn vặt buổi tối, mua đặc sản làm quà', q: 'Cho Da Lat' },
+      { cat: 'food', icon: '🍛', name: 'Bờ Nôm Kitchen (Tà Nung)', desc: 'Gà nướng cơm lam, cơm niêu – tiện nếu đi Tà Nung', q: 'Bo Nom Kitchen Ta Nung Da Lat', far: true },
 
-      // THAM QUAN
-      { cat: 'view', icon: '🎢', name: 'Máng trượt Thác Datanla', desc: 'Xe trượt Alpine Coaster xuyên rừng, ~5km từ trung tâm, mở 7h–17h', q: 'Thac Datanla Da Lat' },
-      { cat: 'view', icon: '🌊', name: 'Hồ Xuân Hương', desc: 'Đi bộ thả lỏng chân buổi tối', q: 'Ho Xuan Huong Da Lat' },
+      // VỀ ĐÊM
+      { cat: 'night', icon: '🛒', name: 'Chợ đêm Đà Lạt', desc: 'Ăn vặt, mua đặc sản làm quà', q: 'Cho dem Da Lat' },
+      { cat: 'night', icon: '🍺', name: 'Marché Beer Garden', desc: 'Mới mở trên tầng thượng Chợ Đà Lạt', q: 'Marche Beer Garden Cho Da Lat', hot: true },
+      { cat: 'night', icon: '🗼', name: 'Tháp Vinaphone', desc: 'Lên đèn vàng 18h–22h cuối tuần – đúng tối T6/T7', q: 'Thap Vinaphone Da Lat', hot: true },
+      { cat: 'night', icon: '📸', name: 'Dốc Sương Nguyệt Ánh', desc: 'Góc quay trend "Đại Lý" trên TikTok, miễn phí', q: 'Doc Suong Nguyet Anh Da Lat', hot: true },
+      { cat: 'night', icon: '🌃', name: 'Cafe Panorama (Trại Mát)', desc: 'View thung lũng nhà lồng lên đèn', q: 'Cafe Panorama Trai Mat Da Lat', hot: true },
+      { cat: 'night', icon: '🌊', name: 'Hồ Xuân Hương', desc: 'Đi bộ thả lỏng chân buổi tối', q: 'Ho Xuan Huong Da Lat' },
+
+      // THAM QUAN / VUI CHƠI
+      { cat: 'view', icon: '🎢', name: 'Máng trượt Thác Datanla', desc: 'Alpine Coaster xuyên rừng, ~5km, mở 7h–17h', q: 'Thac Datanla Da Lat', hot: true },
+      { cat: 'view', icon: '🌷', name: 'Công viên hoa Dalat Fantasy', desc: 'Mới, ngay bờ Hồ Xuân Hương, miễn phí', q: 'Cong vien hoa Dalat Fantasy', hot: true },
+      { cat: 'view', icon: '🐶', name: 'Puppy Farm', desc: 'Nông trại cún, đang rất hot', q: 'Puppy Farm Da Lat', hot: true },
+      { cat: 'view', icon: '🌼', name: 'Cao Nguyên Hoa Đà Lạt', desc: 'Vườn hoa trên đồi + khu vui chơi', q: 'Cao Nguyen Hoa Da Lat', hot: true },
+      { cat: 'view', icon: '🏡', name: 'QUÊ Garden', desc: 'Vườn check-in được giới trẻ thích', q: 'QUE Garden Da Lat', hot: true },
+      { cat: 'view', icon: '🌺', name: 'The Florest – Hoa Trong Rừng', desc: 'Vườn hoa giữa rừng thông', q: 'The Florest Hoa Trong Rung Da Lat', hot: true },
+      { cat: 'view', icon: '🚪', name: 'Cổng Trời Bali (Green House)', desc: 'Cổng check-in view thung lũng', q: 'Cong Troi Bali Green House Da Lat', hot: true },
+      { cat: 'view', icon: '🏰', name: 'God Valley', desc: 'Không gian kiểu châu Âu giữa rừng thông', q: 'God Valley Da Lat', hot: true },
+      { cat: 'view', icon: '🏺', name: 'Đường Hầm Đất Sét', desc: 'Điêu khắc đất sét kể chuyện Đà Lạt', q: 'Duong Ham Dat Set Da Lat' },
+      { cat: 'view', icon: '🏚️', name: 'Crazy House', desc: 'Biệt thự kiến trúc kỳ dị nổi tiếng', q: 'Crazy House Da Lat' },
+      { cat: 'view', icon: '⛪', name: 'Nhà thờ Domaine de Marie', desc: 'Nhà thờ hồng kiến trúc Pháp', q: 'Nha tho Domaine de Marie Da Lat' },
+      { cat: 'view', icon: '⛪', name: 'Nhà thờ Con Gà', desc: 'Nhà thờ Chính tòa ở trung tâm', q: 'Nha tho Con Ga Da Lat' },
+      { cat: 'view', icon: '🏛️', name: 'Quảng trường Lâm Viên', desc: 'Biểu tượng Đà Lạt, gần Hồ Xuân Hương', q: 'Quang truong Lam Vien Da Lat' },
+      { cat: 'view', icon: '🚂', name: 'Ga Đà Lạt', desc: 'Ga cổ, chụp ảnh nhanh', q: 'Ga Da Lat' },
       { cat: 'view', icon: '🌲', name: 'Hồ Tuyền Lâm', desc: 'Chạy xe đèo thông, ngắm hồ', q: 'Ho Tuyen Lam Da Lat' },
       { cat: 'view', icon: '🛕', name: 'Thiền viện Trúc Lâm', desc: 'Yên tĩnh, view hồ Tuyền Lâm', q: 'Thien vien Truc Lam Da Lat' },
       { cat: 'view', icon: '🚡', name: 'Cáp treo Đồi Robin', desc: 'Ngắm rừng thông từ trên cao', q: 'Cap treo Robin Da Lat' },
-      { cat: 'view', icon: '🚂', name: 'Ga Đà Lạt', desc: 'Ga cổ, chụp ảnh nhanh', q: 'Ga Da Lat' },
-      { cat: 'view', icon: '🏛️', name: 'Quảng trường Lâm Viên', desc: 'Trung tâm, gần Hồ Xuân Hương', q: 'Quang truong Lam Vien Da Lat' },
-      { cat: 'view', icon: '🍵', name: 'Đồi chè Cầu Đất', desc: 'Xa ~25km, đi sáng sớm đẹp nhất', q: 'Doi che Cau Dat Da Lat' },
-      { cat: 'view', icon: '⛰️', name: 'Núi Langbiang', desc: 'Xa ~12km, hợp nếu muốn leo thêm', q: 'Nui Langbiang Da Lat' },
+      { cat: 'view', icon: '☁️', name: 'Đồi Đa Phú', desc: 'Săn mây sáng sớm, đồi thông rộng', q: 'Doi Da Phu Da Lat', hot: true },
+      { cat: 'view', icon: '🏔️', name: 'Samten Hills', desc: 'Quần thể tâm linh rất lớn', q: 'Samten Hills Da Lat', far: true },
+      { cat: 'view', icon: '💧', name: 'Suối Tía', desc: 'Suối hoang sơ – đường xa', q: 'Suoi Tia Da Lat', hot: true, far: true },
+      { cat: 'view', icon: '🍵', name: 'Đồi chè Cầu Đất', desc: '~25km, đi sáng sớm đẹp nhất', q: 'Doi che Cau Dat Da Lat', far: true },
+      { cat: 'view', icon: '⛰️', name: 'Núi Langbiang', desc: '~12km, hợp nếu muốn leo thêm', q: 'Nui Langbiang Da Lat', far: true },
     ];
 
-    const GROUPS = { race: '🏃 Race', cafe: '☕ Cà phê / WFH', food: '🍜 Ăn uống', view: '🌲 Tham quan' };
+    const GROUPS = { race: '🏃 Race', cafe: '☕ Cà phê', food: '🍜 Ăn uống', night: '🌙 Về đêm', view: '🌲 Tham quan & vui chơi' };
 
     function mapsUrl(q) {
       return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
@@ -213,14 +258,17 @@
       const list = document.getElementById('place-list');
       let html = '';
       Object.keys(GROUPS).forEach(cat => {
-        if (filter !== 'all' && filter !== cat) return;
-        html += `<h3 class="group-title">${GROUPS[cat]}</h3>`;
-        PLACES.filter(p => p.cat === cat).forEach(p => {
+        if (filter !== 'all' && filter !== 'hot' && filter !== cat) return;
+        const items = PLACES.filter(p => p.cat === cat && (filter !== 'hot' || p.hot));
+        if (!items.length) return;
+        html += `<h3 class="group-title">${GROUPS[cat]} <span class="count">${items.length}</span></h3>`;
+        items.forEach(p => {
+          const tags = (p.hot ? '<span class="tag hot">🔥 Hot</span>' : '') + (p.far ? '<span class="tag far">Xa</span>' : '');
           html += `
             <a class="place ${p.cat}" href="${mapsUrl(p.q)}" target="_blank" rel="noopener">
               <div class="icon">${p.icon}</div>
               <div class="info">
-                <div class="name">${p.name}</div>
+                <div class="name">${p.name}${tags}</div>
                 <div class="desc">${p.desc}</div>
               </div>
               <div class="go">›</div>
